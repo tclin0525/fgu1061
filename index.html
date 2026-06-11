@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>空間預約登記系統</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -77,15 +76,12 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- 🚨 雲端連線智慧診斷紅條 (預設隱藏，若出錯會自動跳出中文病因引導) -->
-    <div id="system-error-banner" class="hidden bg-red-600 text-white text-xs font-bold text-center py-3 px-4 sticky top-0 z-50 shadow-md">
-        <!-- 智慧錯誤引導文字將自動塞入這裡 -->
-    </div>
+    <!-- 🚨 雲端連線智慧診斷紅條 -->
+    <div id="system-error-banner" class="hidden bg-red-600 text-white text-xs font-bold text-center py-3 px-4 sticky top-0 z-50 shadow-md"></div>
 
     <!-- 雲端載入進度提示 -->
     <div id="cloud-loading" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-cream-50 bg-opacity-95 transition-opacity duration-300">
         <div class="relative flex items-center justify-center">
-            <!-- 奶油風溫柔旋轉環 -->
             <div class="w-16 h-16 border-4 border-cream-200 border-t-cream-600 rounded-full animate-spin"></div>
             <span class="absolute text-xl">⏳</span>
         </div>
@@ -93,7 +89,7 @@
         <p class="text-xs text-cream-500 mt-1">系統將即時同步多人借用狀態，防重複衝突</p>
     </div>
 
-    <!-- 100% 物理防卡死安全鎖 (不論 Firebase 連線如何，3秒一到強制解鎖網頁) -->
+    <!-- 100% 物理防卡死安全鎖 -->
     <script>
         setTimeout(function() {
             const loader = document.getElementById('cloud-loading');
@@ -111,21 +107,22 @@
     <header class="bg-cream-100 border-b border-cream-300 sticky top-0 z-40 shadow-sm no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between py-4 md:h-20 gap-4">
-                <!-- LOGO & 系統名稱 -->
                 <div class="flex items-center space-x-3">
                     <div>
                         <h1 class="text-xl font-bold text-cream-800 tracking-wider">空間預約登記系統</h1>
                     </div>
+                    <!-- 連線狀態標籤 -->
+                    <span id="connection-status-badge" class="text-[11px] px-2.5 py-0.5 rounded-full font-semibold bg-amber-100 text-amber-800 border border-amber-200">
+                        連線中...
+                    </span>
                 </div>
 
-                <!-- 導覽選單與管理按鈕 -->
                 <div class="flex items-center gap-3">
                     <nav class="flex bg-cream-200/50 p-1.5 rounded-2xl">
                         <button onclick="switchTab('booking')" id="btn-tab-booking" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center space-x-1.5 bg-cream-600 text-white shadow-sm">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
                             <span>登記借用</span>
                         </button>
-                        <!-- 下面這兩個按鈕預設隱藏 (hidden)，只有管理員登入後才會顯示 -->
                         <button onclick="switchTab('calendar')" id="btn-tab-calendar" class="tab-btn hidden px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center space-x-1.5 text-cream-800 hover:bg-cream-200">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             <span>月份行事曆</span>
@@ -136,7 +133,12 @@
                         </button>
                     </nav>
 
-                    <!-- 內部人員登入入口 (只顯示鑰匙鎖) -->
+                    <!-- 自訂資料庫設定 (⚙️) -->
+                    <button onclick="openConfigModal()" title="資料庫連線設定" class="w-10 h-10 bg-cream-200 hover:bg-cream-300 text-cream-800 rounded-xl border border-cream-300 shadow-sm transition-all duration-300 flex items-center justify-center text-lg">
+                        <span>⚙️</span>
+                    </button>
+
+                    <!-- 內部管理人員 (🔑) -->
                     <button id="admin-auth-btn" onclick="toggleAdminAuth()" title="內部人員登入" class="w-10 h-10 bg-cream-200 hover:bg-cream-300 text-cream-800 rounded-xl border border-cream-300 shadow-sm transition-all duration-300 flex items-center justify-center text-lg">
                         <span id="admin-auth-icon">🔑</span>
                     </button>
@@ -179,12 +181,11 @@
                         <div>
                             <label class="block text-sm font-semibold text-cream-800 mb-1.5">開始時間 <span class="text-red-500">*</span></label>
                             <select id="form-start" onchange="autoSetEndTime(); updateLiveTimeline();" required class="w-full bg-white border border-cream-300 rounded-xl px-4 py-2.5 text-cream-800 focus:outline-none focus:ring-2 focus:ring-cream-600 focus:border-cream-600 transition-colors">
-                                <!-- 由 JS 動態生成 08:00 到 20:30 -->
                             </select>
                         </div>
                     </div>
 
-                    <!-- 歸還日期與時間（兼結束時間） -->
+                    <!-- 歸還日期與時間 -->
                     <div class="bg-cream-50 p-4.5 rounded-2xl border border-cream-200">
                         <div class="flex items-center justify-between mb-2">
                             <label class="block text-sm font-semibold text-cream-800">預計歸還日期時間 (即結束時間) <span class="text-red-500">*</span></label>
@@ -198,7 +199,6 @@
                             <div>
                                 <label class="block text-xs text-cream-600 mb-1">歸還時間</label>
                                 <select id="return-time" onchange="updateLiveTimeline()" required class="w-full bg-white border border-cream-300 rounded-xl px-4 py-2 text-sm text-cream-800 focus:outline-none focus:ring-2 focus:ring-cream-600 focus:border-cream-600 transition-colors">
-                                    <!-- 由 JS 動態生成 08:30 到 21:00 -->
                                 </select>
                             </div>
                         </div>
@@ -244,7 +244,6 @@
 
             <!-- 右側：當日場地借用情形 -->
             <div class="lg:col-span-5 flex flex-col space-y-6">
-                <!-- 借用情形說明卡 -->
                 <div class="bg-cream-100 rounded-3xl p-6 border border-cream-300 shadow-sm">
                     <h3 class="text-lg font-bold text-cream-800 mb-2 flex items-center space-x-2">
                         <span>📊</span>
@@ -264,25 +263,21 @@
                     </div>
                 </div>
 
-                <!-- 26 個時段直覺格（08:00 到 21:00） -->
                 <div class="bg-cream-100 rounded-3xl p-6 border border-cream-300 shadow-sm flex-grow">
                     <div class="flex justify-between items-center mb-4 pb-2 border-b border-cream-200">
                         <span class="text-sm font-bold text-cream-700" id="timeline-venue-label">117 會議室</span>
                         <span class="text-xs bg-cream-200 text-cream-700 py-1 px-2 rounded-lg" id="timeline-date-label">請選擇日期</span>
                     </div>
 
-                    <!-- 時段時間軸列表 -->
                     <div class="space-y-2 overflow-y-auto max-h-[460px] pr-2" id="timeline-slots-container">
-                        <!-- 由 JS 生成 30 分鐘為單位的按鈕/格子 -->
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- ==================== Tab 2: 月份行事曆頁面 (預設隱藏) ==================== -->
+        <!-- ==================== Tab 2: 月份行事曆頁面 ==================== -->
         <section id="tab-calendar" class="tab-content hidden space-y-6">
             <div class="bg-cream-100 rounded-3xl p-6 border border-cream-300 shadow-sm">
-                <!-- 行事曆頂部控制 -->
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div class="flex items-center space-x-3">
                         <span class="text-3xl">📅</span>
@@ -292,28 +287,20 @@
                         </div>
                     </div>
 
-                    <!-- 選擇年月 -->
                     <div class="flex items-center space-x-2">
-                        <button onclick="changeCalendarMonth(-1)" class="w-10 h-10 rounded-xl bg-cream-200 hover:bg-cream-300 text-cream-800 transition-colors flex items-center justify-center font-bold">
-                            &lt;
-                        </button>
+                        <button onclick="changeCalendarMonth(-1)" class="w-10 h-10 rounded-xl bg-cream-200 hover:bg-cream-300 text-cream-800 transition-colors flex items-center justify-center font-bold">&lt;</button>
                         <select id="calendar-year" onchange="renderCalendar()" class="bg-white border border-cream-300 rounded-xl px-3 py-2 text-sm text-cream-800 focus:outline-none">
                             <option value="2025">2025 年</option>
                             <option value="2026" selected>2026 年</option>
                             <option value="2027">2027 年</option>
                             <option value="2028">2028 年</option>
                         </select>
-                        <select id="calendar-month" onchange="renderCalendar()" class="bg-white border border-cream-300 rounded-xl px-3 py-2 text-sm text-cream-800 focus:outline-none">
-                            <!-- JS 動態生成 12 個月 -->
-                        </select>
-                        <button onclick="changeCalendarMonth(1)" class="w-10 h-10 rounded-xl bg-cream-200 hover:bg-cream-300 text-cream-800 transition-colors flex items-center justify-center font-bold">
-                            &gt;
-                        </button>
+                        <select id="calendar-month" onchange="renderCalendar()" class="bg-white border border-cream-300 rounded-xl px-3 py-2 text-sm text-cream-800 focus:outline-none"></select>
+                        <button onclick="changeCalendarMonth(1)" class="w-10 h-10 rounded-xl bg-cream-200 hover:bg-cream-300 text-cream-800 transition-colors flex items-center justify-center font-bold">&gt;</button>
                     </div>
                 </div>
 
-                <!-- 星期標題 -->
-                <div class="grid grid-cols-7 gap-2 mt-8 text-center text-xs font-bold text-cream-600">
+                <div class="grid grid-cols-7 gap-2 mt-8 text-center text-xs font-bold text-cream-666">
                     <div class="py-2 text-red-400">週日</div>
                     <div class="py-2">週一</div>
                     <div class="py-2">週二</div>
@@ -323,35 +310,20 @@
                     <div class="py-2 text-cream-500">週六</div>
                 </div>
 
-                <!-- 月曆日期格子 -->
-                <div id="calendar-grid" class="grid grid-cols-7 gap-2.5 mt-2">
-                    <!-- JS 生成 -->
-                </div>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-2.5 mt-2"></div>
             </div>
             
-            <!-- 日曆下方場地顏色提示 -->
             <div class="flex flex-wrap items-center gap-4 text-xs font-medium px-4 text-cream-600">
                 <span class="font-bold">場地圖示辨識：</span>
-                <span class="inline-flex items-center space-x-1">
-                    <span class="w-2.5 h-2.5 rounded-full bg-orange-400"></span>
-                    <span>117 會議室</span>
-                </span>
-                <span class="inline-flex items-center space-x-1">
-                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-                    <span>117 課輔室</span>
-                </span>
-                <span class="inline-flex items-center space-x-1">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-                    <span>德香樓312</span>
-                </span>
+                <span class="inline-flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-orange-400"></span><span>117 會議室</span></span>
+                <span class="inline-flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span><span>117 課輔室</span></span>
+                <span class="inline-flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span><span>德香樓312</span></span>
             </div>
         </section>
 
-        <!-- ==================== Tab 3: 統計與總表頁面 (預設隱藏) ==================== -->
+        <!-- ==================== Tab 3: 統計與總表頁面 ==================== -->
         <section id="tab-reports" class="tab-content hidden space-y-8">
-            <!-- 數據小卡 -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <!-- 指標 1 -->
                 <div class="bg-cream-100 rounded-3xl p-6 border border-cream-300 shadow-sm flex items-center justify-between">
                     <div>
                         <p class="text-xs text-cream-500 font-medium">總借用次數</p>
@@ -359,7 +331,6 @@
                     </div>
                     <div class="text-3xl bg-cream-200 w-14 h-14 rounded-2xl flex items-center justify-center">📈</div>
                 </div>
-                <!-- 指標 2 -->
                 <div class="bg-cream-100 rounded-3xl p-6 border border-cream-300 shadow-sm flex items-center justify-between">
                     <div>
                         <p class="text-xs text-cream-500 font-medium">最熱門場地</p>
@@ -367,7 +338,6 @@
                     </div>
                     <div class="text-3xl bg-cream-200 w-14 h-14 rounded-2xl flex items-center justify-center">👑</div>
                 </div>
-                <!-- 指標 3 -->
                 <div class="bg-cream-100 rounded-3xl p-6 border border-cream-300 shadow-sm flex items-center justify-between">
                     <div>
                         <p class="text-xs text-cream-500 font-medium">最常借用單位</p>
@@ -377,7 +347,6 @@
                 </div>
             </div>
 
-            <!-- 總表篩選與表格卡 -->
             <div class="bg-cream-100 rounded-3xl p-6 border border-cream-300 shadow-sm">
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-6 border-b border-cream-200">
                     <div>
@@ -385,10 +354,9 @@
                             <span>📊</span>
                             <span>歷史借用總表管理</span>
                         </h3>
-                        <p class="text-xs text-cream-500 mt-1">選取特定年份與月份，直接篩選並產出專屬報表。支援一鍵匯出 Excel (CSV) 檔或進行實體列印。</p>
+                        <p class="text-xs text-cream-500 mt-1">選取特定年份與月份報表。支援一鍵匯出 Excel (CSV) 檔與列印。</p>
                     </div>
 
-                    <!-- 篩選器與按鈕組 -->
                     <div class="flex flex-wrap items-center gap-3">
                         <select id="report-filter-year" onchange="filterAndRenderReportTable()" class="bg-white border border-cream-300 rounded-xl px-3 py-2 text-sm text-cream-800 focus:outline-none">
                             <option value="all">所有年份</option>
@@ -399,56 +367,27 @@
                         </select>
                         <select id="report-filter-month" onchange="filterAndRenderReportTable()" class="bg-white border border-cream-300 rounded-xl px-3 py-2 text-sm text-cream-800 focus:outline-none">
                             <option value="all" selected>整年度 (1~12月)</option>
-                            <option value="01">1 月</option>
-                            <option value="02">2 月</option>
-                            <option value="03">3 月</option>
-                            <option value="04">4 月</option>
-                            <option value="05">5 月</option>
-                            <option value="06">6 月</option>
-                            <option value="07">7 月</option>
-                            <option value="08">8 月</option>
-                            <option value="09">9 月</option>
-                            <option value="10">10 月</option>
-                            <option value="11">11 月</option>
-                            <option value="12">12 月</option>
+                            <option value="01">1 月</option><option value="02">2 月</option><option value="03">3 月</option><option value="04">4 月</option><option value="05">5 月</option><option value="06">6 月</option><option value="07">7 月</option><option value="08">8 月</option><option value="09">9 月</option><option value="10">10 月</option><option value="11">11 月</option><option value="12">12 月</option>
                         </select>
-                        
-                        <!-- 功能按鈕 -->
-                        <button onclick="exportToCSV()" class="px-4 py-2 bg-cream-500 hover:bg-cream-600 text-white font-medium rounded-xl text-xs transition-colors flex items-center space-x-1">
-                            <span>📥 匯出 CSV 檔</span>
-                        </button>
-                        <button onclick="triggerPrint()" class="px-4 py-2 bg-cream-600 hover:bg-cream-700 text-white font-medium rounded-xl text-xs transition-colors flex items-center space-x-1">
-                            <span>🖨️ 列印總表</span>
-                        </button>
+                        <button onclick="exportToCSV()" class="px-4 py-2 bg-cream-500 hover:bg-cream-600 text-white font-medium rounded-xl text-xs transition-colors flex items-center space-x-1"><span>📥 匯出 CSV 檔</span></button>
+                        <button onclick="triggerPrint()" class="px-4 py-2 bg-cream-600 hover:bg-cream-700 text-white font-medium rounded-xl text-xs transition-colors flex items-center space-x-1"><span>🖨️ 列印總表</span></button>
                     </div>
                 </div>
 
-                <!-- 搜尋框 -->
                 <div class="mt-4 flex max-w-md">
                     <input type="text" id="report-search" oninput="filterAndRenderReportTable()" placeholder="搜尋姓名、學號/員編、系所單位..." class="w-full bg-white border border-cream-300 rounded-xl px-4 py-2 text-sm text-cream-800 placeholder-cream-400 focus:outline-none focus:ring-1 focus:ring-cream-600">
                 </div>
 
-                <!-- 表格容器 -->
                 <div class="mt-6 overflow-x-auto rounded-2xl border border-cream-200">
                     <table class="w-full text-left text-sm border-collapse">
                         <thead>
                             <tr class="bg-cream-200/60 text-cream-800 font-bold border-b border-cream-300 text-xs tracking-wider uppercase">
-                                <th class="p-4">借用日期</th>
-                                <th class="p-4">場地</th>
-                                <th class="p-4">借用時段</th>
-                                <th class="p-4">實際歸還時間</th>
-                                <th class="p-4">借用人</th>
-                                <th class="p-4">學號/員編</th>
-                                <th class="p-4">單位/分機</th>
-                                <th class="p-4 text-center">操作</th>
+                                <th class="p-4">借用日期</th><th class="p-4">場地</th><th class="p-4">借用時段</th><th class="p-4">實際歸還時間</th><th class="p-4">借用人</th><th class="p-4">學號/員編</th><th class="p-4">單位/分機</th><th class="p-4 text-center">操作</th>
                             </tr>
                         </thead>
-                        <tbody id="report-table-body" class="divide-y divide-cream-300 bg-white text-cream-800">
-                            <!-- JS 生成每一列資料 -->
-                        </tbody>
+                        <tbody id="report-table-body" class="divide-y divide-cream-300 bg-white text-cream-800"></tbody>
                     </table>
                 </div>
-
                 <div id="report-empty" class="hidden py-16 text-center">
                     <span class="text-4xl">🍃</span>
                     <p class="text-cream-500 text-sm mt-3">當前篩選條件下，無任何空間借用資料</p>
@@ -458,153 +397,156 @@
 
     </main>
 
-    <!-- 頁腳 -->
     <footer class="bg-cream-100 border-t border-cream-300 py-6 mt-12 text-center text-xs text-cream-500 no-print">
         <p>© 2026 奶油風校園/辦公空間預約系統. All Rights Reserved.</p>
         <p class="mt-1">由 Firebase Cloud 雲端資料庫強勢驅動 ｜ 響應式、全設備適配</p>
     </footer>
 
-    <!-- ==================== 模組 & 彈窗 (Custom Modals) ==================== -->
-    <!-- 0. 管理員密碼驗證彈窗 -->
-    <div id="admin-login-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden px-4">
-        <div class="bg-cream-100 rounded-3xl w-full max-w-md p-6 border border-cream-300 shadow-2xl">
+    <!-- ⚙️ 雲端自訂連線設定彈窗 -->
+    <div id="db-config-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden px-4">
+        <div class="bg-cream-100 rounded-3xl w-full max-w-lg p-6 border border-cream-300 shadow-2xl overflow-y-auto max-h-[90vh]">
             <div class="flex items-center justify-between pb-3 border-b border-cream-200">
-                <h3 class="text-base font-bold text-cream-800 flex items-center space-x-1.5">
-                    <span>🔑</span>
-                    <span>內部管理人員驗證</span>
-                </h3>
-                <button onclick="closeAdminLoginModal()" class="text-cream-500 hover:text-cream-800 text-sm font-bold">✕</button>
+                <h3 class="text-base font-bold text-cream-800 flex items-center space-x-1.5">⚙️ 雲端資料庫 (Firebase) 連線設定</h3>
+                <button onclick="closeConfigModal()" class="text-cream-500 hover:text-cream-800 text-sm font-bold">✕</button>
             </div>
-            <p class="text-xs text-cream-600 my-4">請輸入專屬管理密碼以開啟「月份行事曆」與「統計與總表」功能：</p>
+            <p class="text-xs text-cream-600 my-3">如果您更換了 Firebase 專案，可以直接在下方貼入新的金鑰設定，系統會自動儲存在此瀏覽器中：</p>
             
-            <input type="password" id="admin-password-input" placeholder="請輸入管理密碼" class="w-full bg-white border border-cream-300 rounded-xl px-4 py-3 text-sm text-cream-800 focus:outline-none mb-4 tracking-widest text-center">
-            
-            <div id="admin-login-error" class="hidden text-xs text-red-600 mb-4 font-semibold text-center">
-                ⚠️ 密碼不正確，請重新輸入！
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-cream-800 mb-1">API Key (apiKey)</label>
+                    <input type="text" id="cfg-apiKey" class="w-full bg-white border border-cream-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-cream-600">
+                </div>
+                <div>
+                    <label class="block font-semibold text-cream-800 mb-1">Auth Domain (authDomain)</label>
+                    <input type="text" id="cfg-authDomain" class="w-full bg-white border border-cream-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-cream-600">
+                </div>
+                <div>
+                    <label class="block font-semibold text-cream-800 mb-1">Project ID (projectId)</label>
+                    <input type="text" id="cfg-projectId" class="w-full bg-white border border-cream-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-cream-600">
+                </div>
+                <div>
+                    <label class="block font-semibold text-cream-800 mb-1">Storage Bucket (storageBucket)</label>
+                    <input type="text" id="cfg-storageBucket" class="w-full bg-white border border-cream-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-cream-600">
+                </div>
+                <div>
+                    <label class="block font-semibold text-cream-800 mb-1">Messaging Sender ID (messagingSenderId)</label>
+                    <input type="text" id="cfg-messagingSenderId" class="w-full bg-white border border-cream-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-cream-600">
+                </div>
+                <div>
+                    <label class="block font-semibold text-cream-800 mb-1">App ID (appId)</label>
+                    <input type="text" id="cfg-appId" class="w-full bg-white border border-cream-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-cream-600">
+                </div>
             </div>
 
-            <div class="flex justify-end space-x-3">
-                <button onclick="closeAdminLoginModal()" class="px-4 py-2 bg-cream-200 hover:bg-cream-300 text-cream-800 text-xs font-semibold rounded-lg transition-colors">
-                    取消
-                </button>
-                <button onclick="verifyAdminCode()" class="px-5 py-2 bg-cream-600 hover:bg-cream-700 text-white text-xs font-semibold rounded-lg transition-colors">
-                    確認登入
-                </button>
+            <div class="flex justify-between items-center mt-5 pt-3 border-t border-cream-200">
+                <button onclick="resetConfigToDefault()" class="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold rounded-lg">恢復預設值</button>
+                <div class="flex space-x-2">
+                    <button onclick="closeConfigModal()" class="px-4 py-2 bg-cream-200 hover:bg-cream-300 text-cream-800 text-xs font-semibold rounded-lg">取消</button>
+                    <button onclick="saveCustomConfig()" class="px-5 py-2 bg-cream-600 hover:bg-cream-700 text-white text-xs font-semibold rounded-lg">儲存並重啟</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- 1. 每日借用詳情彈窗 -->
+    <!-- 🔑 管理員登入彈窗 -->
+    <div id="admin-login-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden px-4">
+        <div class="bg-cream-100 rounded-3xl w-full max-w-md p-6 border border-cream-300 shadow-2xl">
+            <div class="flex items-center justify-between pb-3 border-b border-cream-200">
+                <h3 class="text-base font-bold text-cream-800 flex items-center space-x-1.5">🔑 內部管理人員驗證</h3>
+                <button onclick="closeAdminLoginModal()" class="text-cream-500 hover:text-cream-800 text-sm font-bold">✕</button>
+            </div>
+            <p class="text-xs text-cream-600 my-4">請輸入專屬管理密碼以開啟管理分頁功能：</p>
+            <input type="password" id="admin-password-input" placeholder="請輸入管理密碼" class="w-full bg-white border border-cream-300 rounded-xl px-4 py-3 text-sm text-cream-800 focus:outline-none mb-4 text-center tracking-widest">
+            <div id="admin-login-error" class="hidden text-xs text-red-600 mb-4 font-semibold text-center">⚠️ 密碼不正確，請重新輸入！</div>
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeAdminLoginModal()" class="px-4 py-2 bg-cream-200 hover:bg-cream-300 text-cream-800 text-xs font-semibold rounded-lg">取消</button>
+                <button onclick="verifyAdminCode()" class="px-5 py-2 bg-cream-600 hover:bg-cream-700 text-white text-xs font-semibold rounded-lg">確認登入</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📂 日期預約詳情彈窗 -->
     <div id="day-detail-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm hidden px-4">
         <div class="bg-cream-100 rounded-3xl w-full max-w-xl p-6 sm:p-8 border border-cream-300 shadow-xl max-h-[85vh] flex flex-col">
             <div class="flex items-center justify-between pb-4 border-b border-cream-300">
                 <div>
-                    <h3 class="text-lg font-bold text-cream-800" id="modal-date-title">2026年 06月 09日</h3>
+                    <h3 class="text-lg font-bold text-cream-800" id="modal-date-title">日期</h3>
                     <p class="text-xs text-cream-500">當日借用詳情與快速管理</p>
                 </div>
-                <button onclick="closeDayDetailModal()" class="w-8 h-8 rounded-full bg-cream-200 hover:bg-cream-300 flex items-center justify-center text-cream-700 transition-colors">
-                    ✕
-                </button>
+                <button onclick="closeDayDetailModal()" class="w-8 h-8 rounded-full bg-cream-200 hover:bg-cream-300 flex items-center justify-center text-cream-700">✕</button>
             </div>
-            
-            <!-- 詳情清單 (可滾動) -->
-            <div class="flex-grow overflow-y-auto py-4 space-y-4" id="modal-bookings-list">
-                <!-- JS 動態插入 -->
-            </div>
-
+            <div class="flex-grow overflow-y-auto py-4 space-y-4" id="modal-bookings-list"></div>
             <div class="pt-4 border-t border-cream-300 flex justify-end">
-                <button onclick="closeDayDetailModal()" class="px-5 py-2.5 bg-cream-600 hover:bg-cream-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors">
-                    關閉視窗
-                </button>
+                <button onclick="closeDayDetailModal()" class="px-5 py-2.5 bg-cream-600 hover:bg-cream-700 text-white text-sm font-semibold rounded-xl">關閉視窗</button>
             </div>
         </div>
     </div>
 
-    <!-- 2. 取消借用驗證彈窗 (替代傳統 prompt/confirm) -->
+    <!-- 🗑️ 取消預約安全確認彈窗 -->
     <div id="cancel-confirm-modal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden px-4">
         <div class="bg-cream-100 rounded-3xl w-full max-w-md p-6 border border-cream-300 shadow-2xl">
-            <h3 class="text-base font-bold text-cream-800 mb-2 flex items-center space-x-1.5">
-                <span>🔒</span>
-                <span>安全性取消預約確認</span>
-            </h3>
+            <h3 class="text-base font-bold text-cream-800 mb-2 flex items-center space-x-1.5">🔒 安全性取消預約確認</h3>
             <p class="text-xs text-cream-600 mb-4">為了維護資料安全，請填寫此筆登記的「學號或員工編號」以確認取消此預約：</p>
-            
             <input type="text" id="cancel-uid-input" placeholder="輸入此筆借用的學號 / 員工編號" class="w-full bg-white border border-cream-300 rounded-xl px-4 py-3 text-sm text-cream-800 focus:outline-none mb-4">
-            
-            <div id="cancel-error-msg" class="hidden text-xs text-red-600 mb-4 font-semibold">
-                ⚠️ 輸入的學號或編號不正確，驗證失敗！
-            </div>
-
+            <div id="cancel-error-msg" class="hidden text-xs text-red-600 mb-4 font-semibold">⚠️ 輸入的學號或編號不正確，驗證失敗！</div>
             <div class="flex justify-end space-x-3">
-                <button onclick="closeCancelConfirmModal()" class="px-4 py-2 bg-cream-200 hover:bg-cream-300 text-cream-800 text-xs font-semibold rounded-lg transition-colors">
-                    取消
-                </button>
-                <button onclick="confirmBookingDeletion()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors">
-                    確定刪除預約
-                </button>
+                <button onclick="closeCancelConfirmModal()" class="px-4 py-2 bg-cream-200 hover:bg-cream-300 text-cream-800 text-xs font-semibold rounded-lg">取消</button>
+                <button onclick="confirmBookingDeletion()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg">確定刪除預約</button>
             </div>
         </div>
     </div>
 
-    <!-- 3. 自定義提示 Toast -->
+    <!-- 🌸 系統提示 Toast -->
     <div id="toast-notification" class="fixed bottom-6 right-6 z-[100] transform translate-y-12 opacity-0 pointer-events-none transition-all duration-300 flex items-center space-x-2.5 px-5 py-4 rounded-2xl shadow-xl max-w-sm">
         <span id="toast-icon" class="text-xl"></span>
-        <div>
-            <p id="toast-text" class="text-xs font-bold"></p>
-        </div>
+        <div><p id="toast-text" class="text-xs font-bold"></p></div>
     </div>
 
-    <!-- ==================== Print Layout Area (僅在列印時顯示) ==================== -->
+    <!-- 🖨️ 列印配置區 -->
     <div class="hidden print-area p-8" id="print-report-layout">
         <h1 class="text-2xl font-bold text-center border-b-2 border-gray-800 pb-2">空間預約登記 - 歷史借用總表</h1>
         <p class="text-right text-xs mt-2" id="print-meta-date">列印日期：</p>
         <p class="text-xs text-gray-600 mb-4" id="print-meta-filter">篩選條件：</p>
-        
         <table class="w-full text-left text-xs border-collapse border border-gray-400">
             <thead>
                 <tr class="bg-gray-100 border-b border-gray-400">
-                    <th class="border border-gray-400 p-2">借用日期</th>
-                    <th class="border border-gray-400 p-2">借用地點</th>
-                    <th class="border border-gray-400 p-2">借用時段</th>
-                    <th class="border border-gray-400 p-2">歸還時間</th>
-                    <th class="border border-gray-400 p-2">借用人</th>
-                    <th class="border border-gray-400 p-2">學號/員編</th>
-                    <th class="border border-gray-400 p-2">系所單位</th>
-                    <th class="border border-gray-400 p-2">連絡電話</th>
+                    <th class="border border-gray-400 p-2">借用日期</th><th class="border border-gray-400 p-2">借用地點</th><th class="border border-gray-400 p-2">借用時段</th><th class="border border-gray-400 p-2">歸還時間</th><th class="border border-gray-400 p-2">借用人</th><th class="border border-gray-400 p-2">學號/員編</th><th class="border border-gray-400 p-2">系所單位</th><th class="border border-gray-400 p-2">連絡電話</th>
                 </tr>
             </thead>
-            <tbody id="print-table-body">
-                <!-- JS 動態渲染 -->
-            </tbody>
+            <tbody id="print-table-body"></tbody>
         </table>
     </div>
 
-    <!-- Firebase JS SDKs -->
+    <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+        import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
         import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-        // 1. 初始化資料庫 (確保環境變數能安全載入)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'cream-venue-booking-system';
-        let firebaseConfig;
+        const appId = 'fgu1061-booking-system';
         
-        if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-            firebaseConfig = JSON.parse(__firebase_config);
-        } else {
-            // 您專屬的 fgu106 雲端金鑰：
-            firebaseConfig = {
-                apiKey: "AIzaSyCFCoDh_VvVCfoj8FL-RZYtYTQ_uAvYMKQ",
-                authDomain: "fgu106-97074.firebaseapp.com",
-                projectId: "fgu106-97074",
-                storageBucket: "fgu106-97074.firebasestorage.app",
-                messagingSenderId: "276735113214",
-                appId: "1:276735113214:web:c285f40cf30c2b0d4b72af"
-            };
+        // 預設資料庫設定
+        const defaultFirebaseConfig = {
+            apiKey: "AIzaSyCFCoDh_VvVCfoj8FL-RZYtYTQ_uAvYMKQ",
+            authDomain: "fgu106-97074.firebaseapp.com",
+            projectId: "fgu106-97074",
+            storageBucket: "fgu106-97074.firebasestorage.app",
+            messagingSenderId: "276735113214",
+            appId: "1:276735113214:web:c285f40cf30c2b0d4b72af"
+        };
+
+        // 載入自訂設定 (若 localStorage 中有儲存過)
+        let firebaseConfig = defaultFirebaseConfig;
+        const savedConfig = localStorage.getItem('fgu1061_custom_firebase_config');
+        if (savedConfig) {
+            try {
+                firebaseConfig = JSON.parse(savedConfig);
+            } catch (e) {
+                console.error("Failed to parse saved config, using default", e);
+            }
         }
 
-        // 🚀【獨家新增：防複製格式跑版安全清理機制】
-        // 此機制會自動過濾從網頁複製時可能殘留的不可見 Unicode 隱形字元 (Zero-Width Space)，防呆效果 100%
+        // 安全清理隱形字元
         Object.keys(firebaseConfig).forEach(key => {
             if (typeof firebaseConfig[key] === 'string') {
                 firebaseConfig[key] = firebaseConfig[key].trim().replace(/[\u200B-\u200D\uFEFF]/g, "");
@@ -615,35 +557,26 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // 全域資料儲存
         let bookings = [];
         let currentUser = null;
         let pendingDeleteId = null;
+        let isOfflineMode = false; // 是否切換至本機模擬模式
 
-        // 【管理員安全密碼設定】
         const ADMIN_ACCESS_KEY = "fgu106";
         let isAdmin = false;
 
-        // 時段常數設定 (08:00 到 21:00)
         const TIME_SLOTS = [];
         for (let hour = 8; hour <= 21; hour++) {
             const hStr = hour < 10 ? `0${hour}` : `${hour}`;
             TIME_SLOTS.push(`${hStr}:00`);
-            if (hour < 21) {
-                TIME_SLOTS.push(`${hStr}:30`);
-            }
+            if (hour < 21) TIME_SLOTS.push(`${hStr}:30`);
         }
 
-        // 顯示頂部系統錯誤診斷 Banner 的輔助函式
         function showSystemErrorBanner(message) {
             const banner = document.getElementById('system-error-banner');
-            if (banner) {
-                banner.textContent = message;
-                banner.classList.remove('hidden');
-            }
+            if (banner) { banner.innerHTML = message; banner.classList.remove('hidden'); }
         }
 
-        // 極速強退進度提示功能 (Auto-Dismiss after 3 seconds)
         function dismissLoader() {
             const loader = document.getElementById('cloud-loading');
             if (loader && loader.style.display !== 'none') {
@@ -652,48 +585,68 @@
             }
         }
 
-        // 2. 指數退避重試邏輯
-        async function runWithBackoff(fn, retries = 5, delay = 1000) {
-            try {
-                return await fn();
-            } catch (err) {
-                if (retries <= 1) {
-                    showToast("連線發生錯誤，請稍後重試", "error");
-                    throw err;
+        // 更新頂端連線燈號
+        function updateStatusBadge() {
+            const badge = document.getElementById('connection-status-badge');
+            if (badge) {
+                if (isOfflineMode) {
+                    badge.textContent = "離線模擬中 🟡";
+                    badge.className = "text-[11px] px-2 py-0.5 rounded-full font-semibold bg-amber-100 text-amber-800 border border-amber-200";
+                } else {
+                    badge.textContent = "雲端同步中 🟢";
+                    badge.className = "text-[11px] px-2 py-0.5 rounded-full font-semibold bg-green-100 text-green-800 border border-green-200";
                 }
-                await new Promise(resolve => setTimeout(resolve, delay));
-                return runWithBackoff(fn, retries - 1, delay * 2);
             }
         }
 
-        // 3. 身份驗證監聽 (RULE 3 - Auth Before Queries)
+        // 載入本機預留模擬資料
+        function loadOfflineData() {
+            const localData = localStorage.getItem('fgu1061_offline_bookings');
+            if (localData) {
+                bookings = JSON.parse(localData);
+            } else {
+                bookings = [
+                    {
+                        id: 'mock_1',
+                        venue: '117會議室',
+                        bookingDate: new Date().toISOString().split('T')[0],
+                        startTime: '08:00',
+                        endTime: '09:00',
+                        returnDate: new Date().toISOString().split('T')[0],
+                        returnTime: '09:00',
+                        name: '範例管理員',
+                        uid: '111',
+                        department: '系統部門',
+                        phone: '#1234',
+                        createdAt: new Date().toISOString()
+                    }
+                ];
+            }
+            updateLiveTimeline();
+            renderCalendar();
+            filterAndRenderReportTable();
+            updateReportStats();
+        }
+
         async function startAuth() {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                await signInAnonymously(auth);
+                isOfflineMode = false;
+                updateStatusBadge();
             } catch (e) {
-                console.error("Auth Exception:", e);
-                dismissLoader(); // 認證異常，立刻解鎖畫面
+                console.error("Auth Error:", e);
+                dismissLoader();
                 
-                // ⚙️ 智慧錯誤診斷機制
-                let friendlyMsg = "雲端認證失敗！";
-                if (e.code === 'auth/operation-not-allowed') {
-                    friendlyMsg = "⚠️ 錯誤：您尚未在 Firebase Console 啟用『匿名登入』！請前往 驗證 (Authentication) -> 登入方法 (Sign-in method) 啟用匿名。";
-                } else if (e.code === 'auth/unauthorized-domain') {
-                    friendlyMsg = "⚠️ 錯誤：網域未授權！請前往 Firebase Console -> 驗證 (Authentication) -> 設定 (Settings) -> 授權網域 (Authorized domains) 新增白名單：tclin0525.github.io";
-                } else if (e.code === 'auth/api-key-not-valid') {
-                    friendlyMsg = "⚠️ 錯誤：無效的金鑰！請前往 Firebase Console -> 驗證 -> 啟用『Identity Toolkit API』即可立刻開通此金鑰。";
-                } else {
-                    friendlyMsg = `⚠️ 雲端連線失敗：${e.message} (代碼: ${e.code || 'unknown'})`;
-                }
+                // ⚙️ 啟用本機離線模式，避免阻擋預覽與本機測試使用
+                isOfflineMode = true;
+                loadOfflineData();
+                updateStatusBadge();
+                
+                let friendlyMsg = "⚠️ <b>雲端授權失敗 (金鑰無效或受沙盒網域限制)</b>：已自動切換至「離線模擬模式」，您仍可正常測試所有預訂與管理功能！您也可以點選頂端 ⚙️ 設定自訂金鑰。";
                 showSystemErrorBanner(friendlyMsg);
             }
         }
 
-        // 啟動 Firebase 認證
         startAuth();
 
         onAuthStateChanged(auth, (user) => {
@@ -703,30 +656,19 @@
             }
         });
 
-        // 4. 即時同步監聽 (RULE 1 & 2 - Strict Paths & Simple Queries)
         function setupRealtimeSync() {
+            if (isOfflineMode) return;
             const pathCol = collection(db, 'artifacts', appId, 'public', 'data', 'bookings');
-            
             onSnapshot(pathCol, (snapshot) => {
                 const tempBookings = [];
-                snapshot.forEach(doc => {
-                    tempBookings.push({
-                        id: doc.id,
-                        ...doc.data()
-                    });
-                });
-                
+                snapshot.forEach(doc => { tempBookings.push({ id: doc.id, ...doc.data() }); });
                 tempBookings.sort((a, b) => {
-                    if (a.bookingDate !== b.bookingDate) {
-                        return b.bookingDate.localeCompare(a.bookingDate);
-                    }
+                    if (a.bookingDate !== b.bookingDate) return b.bookingDate.localeCompare(a.bookingDate);
                     return a.startTime.localeCompare(b.startTime);
                 });
-
                 bookings = tempBookings;
-
-                // 成功同步，解鎖畫面并隱藏可能的錯誤紅條
                 dismissLoader();
+                
                 const banner = document.getElementById('system-error-banner');
                 if (banner) banner.classList.add('hidden');
 
@@ -734,19 +676,16 @@
                 renderCalendar();
                 filterAndRenderReportTable();
                 updateReportStats();
-
             }, (error) => {
-                console.error("Firestore Listen Error: ", error);
+                console.error("Firestore Error:", error);
                 dismissLoader();
-                
-                // 智慧 Firestore 錯誤診斷
-                let friendlyMsg = "⚠️ 讀取雲端資料庫失敗：請確認您的 Firestore Database『安全規則 (Rules)』已設定為 allow read, write: if true;";
-                showSystemErrorBanner(friendlyMsg);
+                isOfflineMode = true;
+                loadOfflineData();
+                updateStatusBadge();
+                showSystemErrorBanner("⚠️ 讀取雲端資料庫失敗。已自動切換至「離線模擬模式」運作，您仍可正常預約！");
             });
         }
 
-
-        // ==================== 時段輔助處理 ====================
         function timeToMinutes(timeStr) {
             if (!timeStr) return 0;
             const [h, m] = timeStr.split(':').map(Number);
@@ -756,57 +695,40 @@
         function checkConflict(venue, date, start, end, ignoreId = null) {
             const targetStart = timeToMinutes(start);
             const targetEnd = timeToMinutes(end);
-
             return bookings.some(b => {
                 if (b.id === ignoreId) return false;
                 if (b.venue !== venue || b.bookingDate !== date) return false;
-
                 const bStart = timeToMinutes(b.startTime);
                 const bEnd = timeToMinutes(b.endTime || b.returnTime);
-
                 return (targetStart < bEnd && targetEnd > bStart);
             });
         }
 
-        // ==================== 頁面功能邏輯 ====================
         function initTimeDropdowns() {
             const startSel = document.getElementById('form-start');
             const returnTimeSel = document.getElementById('return-time');
-
-            startSel.innerHTML = '';
-            returnTimeSel.innerHTML = '';
+            startSel.innerHTML = ''; returnTimeSel.innerHTML = '';
 
             TIME_SLOTS.slice(0, TIME_SLOTS.length - 1).forEach(time => {
-                const opt = document.createElement('option');
-                opt.value = time;
-                opt.textContent = time;
-                startSel.appendChild(opt);
+                const opt = document.createElement('option'); opt.value = time; opt.textContent = time; startSel.appendChild(opt);
             });
-
             TIME_SLOTS.slice(1).forEach(time => {
-                const opt = document.createElement('option');
-                opt.value = time;
-                opt.textContent = time;
-                returnTimeSel.appendChild(opt);
+                const opt = document.createElement('option'); opt.value = time; opt.textContent = time; returnTimeSel.appendChild(opt);
             });
 
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('form-date').value = today;
             document.getElementById('return-date').value = today;
-
             autoSetEndTime();
         }
 
         window.autoSetEndTime = function() {
             const startVal = document.getElementById('form-start').value;
             const returnTimeSel = document.getElementById('return-time');
-            
             const startIndex = TIME_SLOTS.indexOf(startVal);
-            
             if (startIndex !== -1 && startIndex < TIME_SLOTS.length - 1) {
                 returnTimeSel.selectedIndex = startIndex;
             }
-            
             document.getElementById('return-date').value = document.getElementById('form-date').value;
         };
 
@@ -830,11 +752,7 @@
 
                 if (isConflict || isPastReturn) {
                     warnBox.classList.remove('hidden');
-                    if (isPastReturn) {
-                        warnBox.querySelector('p.text-xs').textContent = "預計歸還日期時間必須晚於借用開始時間，請重新檢查。";
-                    } else {
-                        warnBox.querySelector('p.text-xs').textContent = "您所選擇的借用至歸還時段與他人已登記的時段重複。請查看右側看板並調整時間。";
-                    }
+                    warnBox.querySelector('p.text-xs').textContent = isPastReturn ? "預計歸還日期時間必須晚於借用開始時間，請重新檢查。" : "您所選擇的借用至歸還時段與他人已登記的時段重複。請查看右側看板並調整時間。";
                     submitBtn.disabled = true;
                     submitBtn.classList.replace('bg-cream-600', 'bg-cream-400');
                     submitBtn.classList.add('cursor-not-allowed');
@@ -845,191 +763,139 @@
                     submitBtn.classList.remove('cursor-not-allowed');
                 }
             }
-
             renderLiveTimelineSlots(venue, date);
         };
 
         function renderLiveTimelineSlots(venue, date) {
             const container = document.getElementById('timeline-slots-container');
             container.innerHTML = '';
-
             if (!date) {
-                container.innerHTML = `<div class="text-center py-10 text-cream-500 text-xs">請先於左側選取借用日期</div>`;
-                return;
+                container.innerHTML = `<div class="text-center py-10 text-cream-500 text-xs">請先於左側選取借用日期</div>`; return;
             }
 
             for (let i = 0; i < TIME_SLOTS.length - 1; i++) {
-                const sTime = TIME_SLOTS[i];
-                const eTime = TIME_SLOTS[i + 1];
-
+                const sTime = TIME_SLOTS[i]; const eTime = TIME_SLOTS[i + 1];
                 const occupant = bookings.find(b => {
                     if (b.venue !== venue || b.bookingDate !== date) return false;
-                    const bStart = timeToMinutes(b.startTime);
-                    const bEnd = timeToMinutes(b.endTime || b.returnTime);
-                    const slotStart = timeToMinutes(sTime);
-                    const slotEnd = timeToMinutes(eTime);
-                    return (slotStart < bEnd && slotEnd > bStart);
+                    return (timeToMinutes(sTime) < timeToMinutes(b.endTime || b.returnTime) && timeToMinutes(eTime) > timeToMinutes(b.startTime));
                 });
 
                 const slotDiv = document.createElement('div');
-                slotDiv.className = `flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-200 text-xs`;
-
+                slotDiv.className = `flex items-center justify-between p-3.5 rounded-2xl border text-xs`;
                 if (occupant) {
-                    slotDiv.className += ` bg-cream-500 text-white border-cream-600 shadow-sm shadow-cream-600/10`;
+                    slotDiv.className += ` bg-cream-500 text-white border-cream-600 shadow-sm`;
                     slotDiv.innerHTML = `
-                        <div class="flex items-center space-x-2">
-                            <span class="text-sm">🔒</span>
-                            <span class="font-bold tracking-wide">${sTime} - ${eTime}</span>
-                        </div>
-                        <span class="bg-cream-700/60 text-[10px] px-2 py-0.5 rounded-lg text-cream-100 max-w-[180px] truncate">
-                            👤 ${occupant.name} (${occupant.department})
-                        </span>
+                        <div class="flex items-center space-x-2"><span>🔒</span><span class="font-bold">${sTime} - ${eTime}</span></div>
+                        <span class="bg-cream-700/60 text-[10px] px-2 py-0.5 rounded-lg max-w-[180px] truncate">👤 ${occupant.name} (${occupant.department})</span>
                     `;
                 } else {
-                    slotDiv.className += ` bg-white text-cream-800 border-cream-300 hover:border-cream-50 hover:bg-cream-50`;
+                    slotDiv.className += ` bg-white text-cream-800 border-cream-300 hover:bg-cream-50`;
                     slotDiv.innerHTML = `
-                        <div class="flex items-center space-x-2">
-                            <span class="text-sm text-green-500">✓</span>
-                            <span class="font-bold tracking-wide text-cream-700">${sTime} - ${eTime}</span>
-                        </div>
+                        <div class="flex items-center space-x-2"><span class="text-green-500">✓</span><span class="font-bold text-cream-700">${sTime} - ${eTime}</span></div>
                         <span class="text-[10px] text-green-600 font-medium">空閒中</span>
                     `;
                 }
-
                 container.appendChild(slotDiv);
             }
         }
 
         window.handleFormSubmit = async function(e) {
             e.preventDefault();
-            if (!currentUser) {
-                showToast("尚未取得雲端授權，請稍候。請確認 Firebase 後台設定！", "error");
-                return;
-            }
+            if (!currentUser && !isOfflineMode) { showToast("尚未取得雲端授權，請稍候", "error"); return; }
 
             const venue = document.getElementById('form-venue').value;
             const date = document.getElementById('form-date').value;
             const start = document.getElementById('form-start').value;
-            
             const retDate = document.getElementById('return-date').value;
             const retTime = document.getElementById('return-time').value;
-
             const name = document.getElementById('form-name').value.trim();
             const uid = document.getElementById('form-uid').value.trim();
             const dept = document.getElementById('form-dept').value.trim();
             const phone = document.getElementById('form-phone').value.trim();
 
-            if (retDate < date) {
-                showToast("歸還日期不得早於借用日期！", "error");
-                return;
+            if (retDate < date || (retDate === date && timeToMinutes(start) >= timeToMinutes(retTime))) {
+                showToast("時間邏輯不正確，請檢查歸還時間", "error"); return;
             }
-            if (retDate === date && timeToMinutes(start) >= timeToMinutes(retTime)) {
-                showToast("歸還時間（結束時間）必須晚於開始時間！", "error");
-                return;
+            if ((date === retDate) && checkConflict(venue, date, start, retTime)) {
+                showToast("時段已被佔用，請重新調整時間", "error"); return;
             }
 
-            const hasOverlapping = (date === retDate) && checkConflict(venue, date, start, retTime);
-            if (hasOverlapping) {
-                showToast("該時段已被預約，請選擇其他空檔！", "error");
-                return;
-            }
-
-            const uniqueId = `booking_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
-
-            const bookingPayload = {
-                venue,
-                bookingDate: date,
-                startTime: start,
-                endTime: retTime,
-                returnDate: retDate,
-                returnTime: retTime,
-                name,
-                uid,
-                department: dept,
-                phone,
-                userId: currentUser.uid,
-                createdAt: new Date().toISOString()
-            };
+            const uniqueId = `booking_${Date.now()}`;
+            const bookingPayload = { id: uniqueId, venue, bookingDate: date, startTime: start, endTime: retTime, returnDate: retDate, returnTime: retTime, name, uid, department: dept, phone, userId: currentUser ? currentUser.uid : 'offline-user', createdAt: new Date().toISOString() };
 
             const submitBtn = document.getElementById('submit-btn');
             submitBtn.disabled = true;
-            submitBtn.innerHTML = `<span>正在上傳至雲端...</span>`;
+            submitBtn.innerHTML = `<span>正在送出登記...</span>`;
+
+            // 🚀【離線測試模式存檔支援】
+            if (isOfflineMode) {
+                bookings.push(bookingPayload);
+                localStorage.setItem('fgu1061_offline_bookings', JSON.stringify(bookings));
+                showToast("預約成功！（本機離線儲存模式）", "success");
+                
+                document.getElementById('bookingForm').reset();
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('form-date').value = today;
+                document.getElementById('return-date').value = today;
+                initTimeDropdowns(); 
+                updateLiveTimeline();
+                renderCalendar();
+                filterAndRenderReportTable();
+                updateReportStats();
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<span>送出登記</span>`;
+                return;
+            }
 
             try {
                 const targetDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'bookings', uniqueId);
-                
-                await runWithBackoff(async () => {
-                    await setDoc(targetDocRef, bookingPayload);
-                });
-
+                await setDoc(targetDocRef, bookingPayload);
                 showToast("預約登記成功！已同步至雲端", "success");
                 
-                document.getElementById('form-name').value = '';
-                document.getElementById('form-uid').value = '';
-                document.getElementById('form-dept').value = '';
-                document.getElementById('form-phone').value = '';
-
-                updateLiveTimeline();
+                document.getElementById('bookingForm').reset(); // 全欄位歸零
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('form-date').value = today;
+                document.getElementById('return-date').value = today;
+                initTimeDropdowns(); 
+                updateLiveTimeline(); // 重新整理看板與消滅錯誤提示
 
             } catch (err) {
                 console.error("Upload error:", err);
-                showToast("連線異常，無法儲存至雲端，請重試", "error");
+                showToast("連線異常，無法儲存", "error");
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = `<span>送出登記</span>`;
             }
         };
 
-
-        // ==================== 月份行事曆 logic ====================
+        // 月份行事曆邏輯
         const calendarMonthDropdown = document.getElementById('calendar-month');
-        const d = new Date();
-        const currentYear = d.getFullYear();
-        const currentMonth = d.getMonth();
-
+        const currentMonth = new Date().getMonth();
         for (let m = 0; m < 12; m++) {
-            const opt = document.createElement('option');
-            opt.value = m;
-            opt.textContent = `${m + 1} 月`;
+            const opt = document.createElement('option'); opt.value = m; opt.textContent = `${m + 1} 月`;
             if (m === currentMonth) opt.selected = true;
             calendarMonthDropdown.appendChild(opt);
         }
 
         window.changeCalendarMonth = function(dir) {
-            let m = parseInt(calendarMonthDropdown.value);
+            let m = parseInt(calendarMonthDropdown.value) + dir;
             let y = parseInt(document.getElementById('calendar-year').value);
-
-            m += dir;
-            if (m < 0) {
-                m = 11;
-                y -= 1;
-            } else if (m > 11) {
-                m = 0;
-                y += 1;
-            }
-
-            document.getElementById('calendar-year').value = y;
-            calendarMonthDropdown.value = m;
+            if (m < 0) { m = 11; y -= 1; } else if (m > 11) { m = 0; y += 1; }
+            document.getElementById('calendar-year').value = y; calendarMonthDropdown.value = m;
             renderCalendar();
         };
 
         window.renderCalendar = function() {
             const year = parseInt(document.getElementById('calendar-year').value);
             const month = parseInt(calendarMonthDropdown.value);
-
             const grid = document.getElementById('calendar-grid');
             grid.innerHTML = '';
 
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            
-            const startDayOfWeek = firstDay.getDay();
-            const numDays = lastDay.getDate();
+            const firstDay = new Date(year, month, 1).getDay();
+            const numDays = new Date(year, month + 1, 0).getDate();
 
-            for (let i = 0; i < startDayOfWeek; i++) {
-                const emptyCell = document.createElement('div');
-                emptyCell.className = "bg-cream-100/30 border border-transparent h-28 rounded-2xl";
-                grid.appendChild(emptyCell);
+            for (let i = 0; i < firstDay; i++) {
+                const empty = document.createElement('div'); empty.className = "bg-cream-100/30 border border-transparent h-28 rounded-2xl"; grid.appendChild(empty);
             }
 
             for (let day = 1; day <= numDays; day++) {
@@ -1037,80 +903,47 @@
                 const dayBookings = bookings.filter(b => b.bookingDate === dateStr);
 
                 const cell = document.createElement('div');
-                cell.className = `bg-white border border-cream-300 h-28 rounded-2xl p-2.5 flex flex-col justify-between hover:border-cream-600 hover:shadow-md hover:shadow-cream-600/5 transition-all cursor-pointer`;
+                cell.className = `bg-white border border-cream-300 h-28 rounded-2xl p-2.5 flex flex-col justify-between hover:border-cream-600 hover:shadow-md transition-all cursor-pointer`;
                 cell.onclick = () => openDayDetailModal(dateStr);
 
                 const isToday = (new Date().toISOString().split('T')[0] === dateStr);
                 const dayNumSpan = document.createElement('span');
-                dayNumSpan.className = `text-xs font-bold w-6 h-6 flex items-center justify-center rounded-lg ${isToday ? 'bg-cream-600 text-white shadow-sm' : 'text-cream-800'}`;
+                dayNumSpan.className = `text-xs font-bold w-6 h-6 flex items-center justify-center rounded-lg ${isToday ? 'bg-cream-600 text-white' : 'text-cream-800'}`;
                 dayNumSpan.textContent = day;
 
-                const topRow = document.createElement('div');
-                topRow.className = "flex justify-between items-start";
-                topRow.appendChild(dayNumSpan);
+                const topRow = document.createElement('div'); topRow.appendChild(dayNumSpan);
 
-                const venueCounts = {
-                    "117會議室": 0,
-                    "117課輔室": 0,
-                    "德香樓312": 0
-                };
+                const venueCounts = { "117會議室": 0, "117課輔室": 0, "德香樓312": 0 };
+                dayBookings.forEach(b => { if (venueCounts[b.venue] !== undefined) venueCounts[b.venue]++; });
 
-                dayBookings.forEach(b => {
-                    if (venueCounts[b.venue] !== undefined) {
-                        venueCounts[b.venue]++;
-                    }
-                });
-
-                const badgeContainer = document.createElement('div');
-                badgeContainer.className = "space-y-1 mt-1.5 flex-grow overflow-y-auto";
-
+                const badgeContainer = document.createElement('div'); badgeContainer.className = "space-y-1 mt-1.5 flex-grow overflow-y-auto";
                 if (venueCounts["117會議室"] > 0) {
-                    const badge = document.createElement('div');
-                    badge.className = "bg-orange-50 border border-orange-200 text-orange-700 text-[9px] px-1.5 py-0.5 rounded font-bold truncate flex justify-between";
-                    badge.innerHTML = `<span>🏢 117會議</span> <span class="bg-orange-200 px-1 rounded">${venueCounts["117會議室"]}</span>`;
-                    badgeContainer.appendChild(badge);
+                    badgeContainer.innerHTML += `<div class="bg-orange-50 border border-orange-200 text-orange-700 text-[9px] px-1.5 py-0.5 rounded font-bold truncate flex justify-between"><span>🏢 117會議</span><span>${venueCounts["117會議室"]}</span></div>`;
                 }
                 if (venueCounts["117課輔室"] > 0) {
-                    const badge = document.createElement('div');
-                    badge.className = "bg-amber-50 border border-amber-200 text-amber-700 text-[9px] px-1.5 py-0.5 rounded font-bold truncate flex justify-between";
-                    badge.innerHTML = `<span>📖 課輔室</span> <span class="bg-amber-200 px-1 rounded">${venueCounts["117課輔室"]}</span>`;
-                    badgeContainer.appendChild(badge);
+                    badgeContainer.innerHTML += `<div class="bg-amber-50 border border-amber-200 text-amber-700 text-[9px] px-1.5 py-0.5 rounded font-bold truncate flex justify-between"><span>📖 課輔室</span><span>${venueCounts["117課輔室"]}</span></div>`;
                 }
                 if (venueCounts["德香樓312"] > 0) {
-                    const badge = document.createElement('div');
-                    badge.className = "bg-emerald-50 border border-emerald-200 text-emerald-700 text-[9px] px-1.5 py-0.5 rounded font-bold truncate flex justify-between";
-                    badge.innerHTML = `<span>🏫 312室</span> <span class="bg-emerald-200 px-1 rounded">${venueCounts["德香樓312"]}</span>`;
-                    badgeContainer.appendChild(badge);
+                    badgeContainer.innerHTML += `<div class="bg-emerald-50 border border-emerald-200 text-emerald-700 text-[9px] px-1.5 py-0.5 rounded font-bold truncate flex justify-between"><span>🏫 312室</span><span>${venueCounts["德香樓312"]}</span></div>`;
                 }
 
-                cell.appendChild(topRow);
-                cell.appendChild(badgeContainer);
-                grid.appendChild(cell);
+                cell.appendChild(topRow); cell.appendChild(badgeContainer); grid.appendChild(cell);
             }
         };
 
-
-        // ==================== 統計與報表總表 Logic ====================
+        // 統計總表管理
         function updateReportStats() {
             document.getElementById('stat-total-count').textContent = `${bookings.length} 次`;
-
             if (bookings.length === 0) {
-                document.getElementById('stat-hot-venue').textContent = '尚無紀錄';
-                document.getElementById('stat-hot-dept').textContent = '尚無紀錄';
-                return;
+                document.getElementById('stat-hot-venue').textContent = '尚無紀錄'; document.getElementById('stat-hot-dept').textContent = '尚無紀錄'; return;
             }
-
-            const venueFreq = {};
-            const deptFreq = {};
-
+            const venueFreq = {}; const deptFreq = {};
             bookings.forEach(b => {
                 venueFreq[b.venue] = (venueFreq[b.venue] || 0) + 1;
                 deptFreq[b.department] = (deptFreq[b.department] || 0) + 1;
             });
-
             const hotVenue = Object.keys(venueFreq).reduce((a, b) => venueFreq[a] > venueFreq[b] ? a : b);
             const hotDept = Object.keys(deptFreq).reduce((a, b) => deptFreq[a] > deptFreq[b] ? a : b);
-
             document.getElementById('stat-hot-venue').textContent = `${hotVenue} (${venueFreq[hotVenue]}次)`;
             document.getElementById('stat-hot-dept').textContent = `${hotDept} (${deptFreq[hotDept]}次)`;
         }
@@ -1119,362 +952,213 @@
             const yearFilter = document.getElementById('report-filter-year').value;
             const monthFilter = document.getElementById('report-filter-month').value;
             const searchVal = document.getElementById('report-search').value.toLowerCase().trim();
-
-            const tbody = document.getElementById('report-table-body');
-            tbody.innerHTML = '';
-
-            const filtered = bookings.filter(b => {
-                const [bYear, bMonth, bDay] = b.bookingDate.split('-');
-                
-                if (yearFilter !== 'all' && bYear !== yearFilter) return false;
-                if (monthFilter !== 'all' && bMonth !== monthFilter) return false;
-
-                if (searchVal) {
-                    const matchName = b.name.toLowerCase().includes(searchVal);
-                    const matchUid = b.uid.toLowerCase().includes(searchVal);
-                    const matchDept = b.department.toLowerCase().includes(searchVal);
-                    const matchVenue = b.venue.toLowerCase().includes(searchVal);
-                    return (matchName || matchUid || matchDept || matchVenue);
-                }
-
-                return true;
-            });
-
-            if (filtered.length === 0) {
-                document.getElementById('report-empty').classList.remove('hidden');
-            } else {
-                document.getElementById('report-empty').classList.add('hidden');
-            }
-
-            filtered.forEach(b => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-cream-50/50 transition-colors";
-
-                tr.innerHTML = `
-                    <td class="p-4 font-bold text-cream-700">${b.bookingDate}</td>
-                    <td class="p-4">
-                        <span class="px-2.5 py-1 rounded-xl text-xs font-semibold ${
-                            b.venue === '117會議室' ? 'bg-orange-50 border border-orange-200 text-orange-700' :
-                            b.venue === '117課輔室' ? 'bg-amber-50 border border-amber-200 text-amber-700' :
-                            'bg-emerald-50 border border-emerald-200 text-emerald-700'
-                        }">
-                            ${b.venue}
-                        </span>
-                    </td>
-                    <td class="p-4 text-xs font-medium text-cream-800">${b.startTime} - ${b.endTime || b.returnTime}</td>
-                    <td class="p-4 text-xs text-cream-600">${b.returnDate} ${b.returnTime}</td>
-                    <td class="p-4 font-semibold">${b.name}</td>
-                    <td class="p-4 text-xs font-mono">${b.uid}</td>
-                    <td class="p-4 text-xs text-cream-600">
-                        <div>${b.department}</div>
-                        <div class="text-[10px] text-cream-400 font-mono">${b.phone}</div>
-                    </td>
-                    <td class="p-4 text-center">
-                        <button onclick="requestCancelBooking('${b.id}')" class="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold rounded-lg border border-red-200 transition-colors">
-                            🗑️ 取消登記
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            renderPrintLayout(filtered, yearFilter, monthFilter);
-        };
-
-        // 導出與列印配置
-        function renderPrintLayout(filteredList, yFilter, mFilter) {
-            const printBody = document.getElementById('print-table-body');
-            printBody.innerHTML = '';
-
-            document.getElementById('print-meta-date').textContent = `列印時間：${new Date().toLocaleString('zh-TW')}`;
-            document.getElementById('print-meta-filter').textContent = `篩選條件 - 年份：${yFilter === 'all' ? '全部' : yFilter+' 年'} ｜ 月份：${mFilter === 'all' ? '全部' : mFilter+' 月'}`;
-
-            filteredList.forEach(b => {
-                const tr = document.createElement('tr');
-                tr.className = "border-b border-gray-400";
-                tr.innerHTML = `
-                    <td class="p-2 border border-gray-400">${b.bookingDate}</td>
-                    <td class="p-2 border border-gray-400 font-bold">${b.venue}</td>
-                    <td class="p-2 border border-gray-400">${b.startTime} - ${b.endTime || b.returnTime}</td>
-                    <td class="p-2 border border-gray-400 text-gray-600">${b.returnDate} ${b.returnTime}</td>
-                    <td class="p-2 border border-gray-400">${b.name}</td>
-                    <td class="p-2 border border-gray-400">${b.uid}</td>
-                    <td class="p-2 border border-gray-400">${b.department}</td>
-                    <td class="p-2 border border-gray-400">${b.phone}</td>
-                `;
-                printBody.appendChild(tr);
-            });
-        }
-
-        window.exportToCSV = function() {
-            const yearFilter = document.getElementById('report-filter-year').value;
-            const monthFilter = document.getElementById('report-filter-month').value;
-            const searchVal = document.getElementById('report-search').value.toLowerCase().trim();
+            const tbody = document.getElementById('report-table-body'); tbody.innerHTML = '';
 
             const filtered = bookings.filter(b => {
                 const [bYear, bMonth] = b.bookingDate.split('-');
                 if (yearFilter !== 'all' && bYear !== yearFilter) return false;
                 if (monthFilter !== 'all' && bMonth !== monthFilter) return false;
                 if (searchVal) {
-                    const matchName = b.name.toLowerCase().includes(searchVal);
-                    const matchUid = b.uid.toLowerCase().includes(searchVal);
-                    const matchDept = b.department.toLowerCase().includes(searchVal);
-                    return (matchName || matchUid || matchDept);
+                    return b.name.toLowerCase().includes(searchVal) || b.uid.toLowerCase().includes(searchVal) || b.department.toLowerCase().includes(searchVal) || b.venue.toLowerCase().includes(searchVal);
                 }
                 return true;
             });
 
-            if (filtered.length === 0) {
-                showToast("無可供匯出的資料", "error");
-                return;
-            }
-
-            let csvContent = "借用日期,場地,開始時間,歸還時間,實際歸還日期,實際歸還時間,借用者姓名,學號/員工編號,系所/單位,連絡電話/分機\n";
+            document.getElementById('report-empty').classList.toggle('hidden', filtered.length > 0);
 
             filtered.forEach(b => {
-                const row = [
-                    b.bookingDate,
-                    b.venue,
-                    b.startTime,
-                    b.endTime || b.returnTime,
-                    b.returnDate,
-                    b.returnTime,
-                    b.name,
-                    b.uid,
-                    b.department,
-                    b.phone
-                ].map(val => `"${val.replace(/"/g, '""')}"`).join(",");
+                const tr = document.createElement('tr'); tr.className = "hover:bg-cream-50/50 transition-colors";
+                tr.innerHTML = `
+                    <td class="p-4 font-bold text-cream-700">${b.bookingDate}</td>
+                    <td class="p-4"><span class="px-2.5 py-1 rounded-xl text-xs font-semibold ${b.venue === '117會議室' ? 'bg-orange-50 border border-orange-200 text-orange-700' : b.venue === '117課輔室' ? 'bg-amber-50 border border-amber-200 text-amber-700' : 'bg-emerald-50 border border-emerald-200 text-emerald-700'}">${b.venue}</span></td>
+                    <td class="p-4 text-xs font-medium">${b.startTime} - ${b.endTime || b.returnTime}</td>
+                    <td class="p-4 text-xs text-cream-600">${b.returnDate} ${b.returnTime}</td>
+                    <td class="p-4 font-semibold">${b.name}</td>
+                    <td class="p-4 text-xs font-mono">${b.uid}</td>
+                    <td class="p-4 text-xs text-cream-600"><div>${b.department}</div><div class="text-[10px] text-cream-400 font-mono">${b.phone}</div></td>
+                    <td class="p-4 text-center"><button onclick="requestCancelBooking('${b.id}')" class="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold rounded-lg border border-red-200">🗑️ 取消登記</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+            renderPrintLayout(filtered, yearFilter, monthFilter);
+        };
+
+        function renderPrintLayout(filteredList, yFilter, mFilter) {
+            const printBody = document.getElementById('print-table-body'); printBody.innerHTML = '';
+            document.getElementById('print-meta-date').textContent = `列印時間：${new Date().toLocaleString('zh-TW')}`;
+            document.getElementById('print-meta-filter').textContent = `篩選條件 - 年份：${yFilter === 'all' ? '全部' : yFilter+' 年'} ｜ 月份：${mFilter === 'all' ? '全部' : mFilter+' 月'}`;
+            filteredList.forEach(b => {
+                printBody.innerHTML += `<tr class="border-b border-gray-400"><td class="p-2 border border-gray-400">${b.bookingDate}</td><td class="p-2 border border-gray-400 font-bold">${b.venue}</td><td class="p-2 border border-gray-400">${b.startTime} - ${b.endTime || b.returnTime}</td><td class="p-2 border border-gray-400">${b.returnDate} ${b.returnTime}</td><td class="p-2 border border-gray-400">${b.name}</td><td class="p-2 border border-gray-400">${b.uid}</td><td class="p-2 border border-gray-400">${b.department}</td><td class="p-2 border border-gray-400">${b.phone}</td></tr>`;
+            });
+        }
+
+        window.exportToCSV = function() {
+            if (bookings.length === 0) { showToast("無可供匯出的資料", "error"); return; }
+            let csvContent = "借用日期,場地,開始時間,歸還時間,實際歸還日期,實際歸還時間,借用者姓名,學號/員工編號,系所/單位,連絡電話/分機\n";
+            bookings.forEach(b => {
+                const row = [b.bookingDate, b.venue, b.startTime, b.endTime || b.returnTime, b.returnDate, b.returnTime, b.name, b.uid, b.department, b.phone].map(val => `"${val.replace(/"/g, '""')}"`).join(",");
                 csvContent += row + "\n";
             });
-
             const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
-            
-            const link = document.createElement("a");
-            link.setAttribute("href", url);
-            link.setAttribute("download", `空間預約報表_${yearFilter}年_${monthFilter}月.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
+            const link = document.createElement("a"); link.setAttribute("href", url); link.setAttribute("download", `空間預約報表.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
             showToast("報表 CSV 檔案已成功下載！", "success");
         };
 
-        window.triggerPrint = function() {
-            window.print();
-        };
+        window.triggerPrint = function() { window.print(); };
 
-
-        // ==================== 內部人員管理登入邏輯 ====================
+        // 權限控管邏輯
         window.toggleAdminAuth = function() {
             if (isAdmin) {
-                logoutAdmin();
+                isAdmin = false; switchTab('booking');
+                document.getElementById('btn-tab-calendar').classList.add('hidden'); document.getElementById('btn-tab-reports').classList.add('hidden');
+                document.getElementById('admin-auth-btn').className = "w-10 h-10 bg-cream-200 text-cream-800 rounded-xl border border-cream-300 flex items-center justify-center text-lg";
+                document.getElementById('admin-auth-icon').textContent = "🔑";
+                showToast("管理員已安全登出", "success");
             } else {
-                document.getElementById('admin-password-input').value = '';
-                document.getElementById('admin-login-error').classList.add('hidden');
-                document.getElementById('admin-login-modal').classList.remove('hidden');
-                document.getElementById('admin-password-input').focus();
+                document.getElementById('admin-password-input').value = ''; document.getElementById('admin-login-error').classList.add('hidden');
+                document.getElementById('admin-login-modal').classList.remove('hidden'); document.getElementById('admin-password-input').focus();
             }
         };
 
-        window.closeAdminLoginModal = function() {
-            document.getElementById('admin-login-modal').classList.add('hidden');
-        };
+        window.closeAdminLoginModal = function() { document.getElementById('admin-login-modal').classList.add('hidden'); };
 
         window.verifyAdminCode = function() {
-            const pwdInput = document.getElementById('admin-password-input').value;
-            if (pwdInput === ADMIN_ACCESS_KEY) {
+            if (document.getElementById('admin-password-input').value === ADMIN_ACCESS_KEY) {
                 isAdmin = true;
-                
-                document.getElementById('btn-tab-calendar').classList.remove('hidden');
-                document.getElementById('btn-tab-reports').classList.remove('hidden');
-
+                document.getElementById('btn-tab-calendar').classList.remove('hidden'); document.getElementById('btn-tab-reports').classList.remove('hidden');
                 const authBtn = document.getElementById('admin-auth-btn');
-                authBtn.classList.replace('bg-cream-200', 'bg-red-50');
-                authBtn.classList.replace('text-cream-800', 'text-red-700');
-                authBtn.classList.replace('border-cream-300', 'border-red-200');
-                authBtn.title = "登出管理員";
+                authBtn.className = "w-10 h-10 bg-red-50 text-red-700 border border-red-200 rounded-xl flex items-center justify-center text-lg";
                 document.getElementById('admin-auth-icon').textContent = "🔓";
-
-                closeAdminLoginModal();
-                showToast("管理員已成功登入！管理分頁已解鎖", "success");
+                closeAdminLoginModal(); showToast("管理員已成功登入！管理分頁已解鎖", "success");
             } else {
                 document.getElementById('admin-login-error').classList.remove('hidden');
             }
         };
 
-        function logoutAdmin() {
-            isAdmin = false;
+        // 自訂連線控制
+        window.openConfigModal = function() {
+            document.getElementById('cfg-apiKey').value = firebaseConfig.apiKey || '';
+            document.getElementById('cfg-authDomain').value = firebaseConfig.authDomain || '';
+            document.getElementById('cfg-projectId').value = firebaseConfig.projectId || '';
+            document.getElementById('cfg-storageBucket').value = firebaseConfig.storageBucket || '';
+            document.getElementById('cfg-messagingSenderId').value = firebaseConfig.messagingSenderId || '';
+            document.getElementById('cfg-appId').value = firebaseConfig.appId || '';
+            document.getElementById('db-config-modal').classList.remove('hidden');
+        };
 
-            switchTab('booking');
+        window.closeConfigModal = function() {
+            document.getElementById('db-config-modal').classList.add('hidden');
+        };
 
-            document.getElementById('btn-tab-calendar').classList.add('hidden');
-            document.getElementById('btn-tab-reports').classList.add('hidden');
+        window.saveCustomConfig = function() {
+            const newConfig = {
+                apiKey: document.getElementById('cfg-apiKey').value.trim(),
+                authDomain: document.getElementById('cfg-authDomain').value.trim(),
+                projectId: document.getElementById('cfg-projectId').value.trim(),
+                storageBucket: document.getElementById('cfg-storageBucket').value.trim(),
+                messagingSenderId: document.getElementById('cfg-messagingSenderId').value.trim(),
+                appId: document.getElementById('cfg-appId').value.trim()
+            };
+            localStorage.setItem('fgu1061_custom_firebase_config', JSON.stringify(newConfig));
+            showToast("自訂連線儲存成功！網頁將重整套用新設定...", "success");
+            setTimeout(() => {
+                window.location.reload();
+            }, 1200);
+        };
 
-            const authBtn = document.getElementById('admin-auth-btn');
-            authBtn.className = "w-10 h-10 bg-cream-200 hover:bg-cream-300 text-cream-800 rounded-xl border border-cream-300 shadow-sm transition-all duration-300 flex items-center justify-center text-lg";
-            authBtn.title = "內部人員登入";
-            document.getElementById('admin-auth-icon').textContent = "🔑";
+        window.resetConfigToDefault = function() {
+            localStorage.removeItem('fgu1061_custom_firebase_config');
+            showToast("自訂設定已清除，恢復預設連線！正在重整頁面...", "success");
+            setTimeout(() => {
+                window.location.reload();
+            }, 1200);
+        };
 
-            showToast("管理員已安全登出", "success");
-        }
-
-
-        // ==================== 模組彈出視窗 UI Logic ====================
         window.openDayDetailModal = function(dateStr) {
             document.getElementById('modal-date-title').textContent = dateStr.replace(/-/g, ' / ');
-            const listContainer = document.getElementById('modal-bookings-list');
-            listContainer.innerHTML = '';
-
+            const listContainer = document.getElementById('modal-bookings-list'); listContainer.innerHTML = '';
             const dayBookings = bookings.filter(b => b.bookingDate === dateStr);
 
             if (dayBookings.length === 0) {
-                listContainer.innerHTML = `
-                    <div class="text-center py-12 text-cream-500">
-                        <span class="text-3xl">🍃</span>
-                        <p class="text-xs mt-2">這天目前沒有任何空間借用登記唷！</p>
-                    </div>
-                `;
+                listContainer.innerHTML = `<div class="text-center py-12 text-cream-500"><span class="text-3xl">🍃</span><p class="text-xs mt-2">這天目前沒有任何空間借用登記唷！</p></div>`;
             } else {
                 dayBookings.forEach(b => {
-                    const block = document.createElement('div');
-                    block.className = "bg-white p-4.5 rounded-2xl border border-cream-300 space-y-2.5 shadow-sm";
-                    block.innerHTML = `
-                        <div class="flex items-center justify-between">
-                            <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold ${
-                                b.venue === '117會議室' ? 'bg-orange-50 border border-orange-200 text-orange-700' :
-                                b.venue === '117課輔室' ? 'bg-amber-50 border border-amber-200 text-amber-700' :
-                                'bg-emerald-50 border border-emerald-200 text-emerald-700'
-                            }">
-                                ${b.venue}
-                            </span>
-                            <span class="text-xs font-semibold text-cream-600">${b.startTime} - ${b.endTime || b.returnTime}</span>
-                        </div>
-                        
-                        <div class="grid grid-cols-2 gap-y-1 text-xs text-cream-700 pt-1.5 border-t border-cream-200">
-                            <div>👤 借用人：<span class="font-bold text-cream-800">${b.name}</span></div>
-                            <div>🏛️ 單位：<span class="font-medium">${b.department}</span></div>
-                            <div>🪪 編號：<span class="font-mono text-cream-500">${b.uid}</span></div>
-                            <div>📞 連絡：<span class="font-mono text-cream-500">${b.phone}</span></div>
-                        </div>
-
-                        <div class="text-[11px] text-cream-500 bg-cream-50 p-2 rounded-xl border border-cream-200 flex justify-between items-center">
-                            <span>預估歸還：${b.returnDate} ${b.returnTime}</span>
-                            <button onclick="requestCancelBooking('${b.id}')" class="text-red-600 hover:text-red-800 font-bold transition-colors">
-                                取消預約
-                            </button>
-                        </div>
-                    `;
-                    listContainer.appendChild(block);
+                    listContainer.innerHTML += `
+                        <div class="bg-white p-4.5 rounded-2xl border border-cream-300 space-y-2.5 shadow-sm">
+                            <div class="flex items-center justify-between"><span class="px-2.5 py-0.5 rounded-lg text-xs font-bold ${b.venue === '117會議室' ? 'bg-orange-50 text-orange-700' : b.venue === '117課輔室' ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}">${b.venue}</span><span class="text-xs font-semibold">${b.startTime} - ${b.endTime || b.returnTime}</span></div>
+                            <div class="grid grid-cols-2 gap-y-1 text-xs text-cream-700 pt-1.5 border-t border-cream-200"><div>👤 借用人：<span class="font-bold text-cream-800">${b.name}</span></div><div>🏛️ 單位：<span>${b.department}</span></div><div>🪪 編號：<span class="font-mono">${b.uid}</span></div><div>📞 連絡：<span class="font-mono">${b.phone}</span></div></div>
+                            <div class="text-[11px] text-cream-500 bg-cream-50 p-2 rounded-xl flex justify-between items-center"><span>預估歸還：${b.returnDate} ${b.returnTime}</span><button onclick="requestCancelBooking('${b.id}')" class="text-red-600 font-bold">取消預約</button></div>
+                        </div>`;
                 });
             }
-
-            const modal = document.getElementById('day-detail-modal');
-            modal.classList.remove('hidden');
+            document.getElementById('day-detail-modal').classList.remove('hidden');
         };
 
-        window.closeDayDetailModal = function() {
-            document.getElementById('day-detail-modal').classList.add('hidden');
-        };
+        window.closeDayDetailModal = function() { document.getElementById('day-detail-modal').classList.add('hidden'); };
 
         window.requestCancelBooking = function(id) {
-            pendingDeleteId = id;
-            document.getElementById('cancel-uid-input').value = '';
-            document.getElementById('cancel-error-msg').classList.add('hidden');
+            pendingDeleteId = id; document.getElementById('cancel-uid-input').value = ''; document.getElementById('cancel-error-msg').classList.add('hidden');
             document.getElementById('cancel-confirm-modal').classList.remove('hidden');
         };
 
-        window.closeCancelConfirmModal = function() {
-            document.getElementById('cancel-confirm-modal').classList.add('hidden');
-            pendingDeleteId = null;
-        };
+        window.closeCancelConfirmModal = function() { document.getElementById('cancel-confirm-modal').classList.add('hidden'); pendingDeleteId = null; };
 
         window.confirmBookingDeletion = async function() {
             if (!pendingDeleteId) return;
+            const target = bookings.find(b => b.id === pendingDeleteId);
+            if (target && document.getElementById('cancel-uid-input').value.trim() === target.uid) {
+                // 離線模擬刪除
+                if (isOfflineMode) {
+                    bookings = bookings.filter(b => b.id !== pendingDeleteId);
+                    localStorage.setItem('fgu1061_offline_bookings', JSON.stringify(bookings));
+                    showToast("預約已成功取消並釋出時段！", "success");
+                    closeCancelConfirmModal(); 
+                    closeDayDetailModal();
+                    updateLiveTimeline();
+                    renderCalendar();
+                    filterAndRenderReportTable();
+                    updateReportStats();
+                    return;
+                }
 
-            const targetBooking = bookings.find(b => b.id === pendingDeleteId);
-            if (!targetBooking) return;
-
-            const userInputUid = document.getElementById('cancel-uid-input').value.trim();
-
-            if (userInputUid !== targetBooking.uid) {
-                document.getElementById('cancel-error-msg').classList.remove('hidden');
-                return;
-            }
-
-            try {
-                const targetDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'bookings', pendingDeleteId);
-                
-                await runWithBackoff(async () => {
+                try {
+                    const targetDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'bookings', pendingDeleteId);
                     await deleteDoc(targetDocRef);
-                });
-
-                showToast("預約已成功取消並釋出時段！", "success");
-                closeCancelConfirmModal();
-                closeDayDetailModal();
-
-            } catch (err) {
-                console.error("Delete failed:", err);
-                showToast("取消預約失敗，請確認網路狀態", "error");
+                    showToast("預約已成功取消並釋出時段！", "success");
+                    closeCancelConfirmModal(); closeDayDetailModal();
+                } catch (e) { showToast("網路異常，刪除失敗", "error"); }
+            } else {
+                document.getElementById('cancel-error-msg').classList.remove('hidden');
             }
         };
 
-
-        // ==================== 共用 UI 功能 ====================
         window.switchTab = function(tabName) {
-            if ((tabName === 'calendar' || tabName === 'reports') && !isAdmin) {
-                showToast("此分頁僅限內部管理人員存取，請先登入！", "error");
-                return;
-            }
-
+            if ((tabName === 'calendar' || tabName === 'reports') && !isAdmin) { showToast("此分頁僅限內部管理人員存取，請先登入！", "error"); return; }
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.className = "tab-btn px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center space-x-1.5 text-cream-800 hover:bg-cream-200";
-                if ((btn.id === 'btn-tab-calendar' || btn.id === 'btn-tab-reports') && !isAdmin) {
-                    btn.classList.add('hidden');
-                }
+                if ((btn.id === 'btn-tab-calendar' || btn.id === 'btn-tab-reports') && !isAdmin) btn.classList.add('hidden');
             });
             const activeBtn = document.getElementById(`btn-tab-${tabName}`);
-            if (activeBtn) {
-                activeBtn.className = "tab-btn px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center space-x-1.5 bg-cream-600 text-white shadow-sm";
-            }
-
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.add('hidden');
-            });
+            if (activeBtn) activeBtn.className = "tab-btn px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center space-x-1.5 bg-cream-600 text-white shadow-sm";
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
             document.getElementById(`tab-${tabName}`).classList.remove('hidden');
 
-            if (tabName === 'calendar') {
-                renderCalendar();
-            } else if (tabName === 'reports') {
-                filterAndRenderReportTable();
-                updateReportStats();
-            } else if (tabName === 'booking') {
-                updateLiveTimeline();
-            }
+            if (tabName === 'calendar') renderCalendar();
+            else if (tabName === 'reports') { filterAndRenderReportTable(); updateReportStats(); }
+            else if (tabName === 'booking') updateLiveTimeline();
         };
 
         window.showToast = function(message, type = "success") {
-            const toast = document.getElementById('toast-notification');
-            const icon = document.getElementById('toast-icon');
-            const text = document.getElementById('toast-text');
-
+            const toast = document.getElementById('toast-notification'); const icon = document.getElementById('toast-icon'); const text = document.getElementById('toast-text');
             text.textContent = message;
-
             if (type === "success") {
-                toast.className = "fixed bottom-6 right-6 z-[100] transform transition-all duration-300 flex items-center space-x-2.5 px-5 py-4 rounded-2xl shadow-xl max-w-sm bg-sage-100 border border-sage-500 text-sage-600";
-                icon.textContent = "🌸";
+                toast.className = "fixed bottom-6 right-6 z-[100] transform transition-all duration-300 flex items-center space-x-2.5 px-5 py-4 rounded-2xl shadow-xl bg-sage-100 border border-sage-500 text-sage-600"; icon.textContent = "🌸";
             } else {
-                toast.className = "fixed bottom-6 right-6 z-[100] transform transition-all duration-300 flex items-center space-x-2.5 px-5 py-4 rounded-2xl shadow-xl max-w-sm bg-red-50 border border-red-300 text-red-800";
-                icon.textContent = "⚠️";
+                toast.className = "fixed bottom-6 right-6 z-[100] transform transition-all duration-300 flex items-center space-x-2.5 px-5 py-4 rounded-2xl shadow-xl bg-red-50 border border-red-300 text-red-800"; icon.textContent = "⚠️";
             }
-
-            toast.classList.remove('translate-y-12', 'opacity-0', 'pointer-events-none');
-            toast.classList.add('translate-y-0', 'opacity-100');
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-0', 'opacity-100');
-                toast.classList.add('translate-y-12', 'opacity-0', 'pointer-events-none');
-            }, 3000);
+            toast.classList.remove('translate-y-12', 'opacity-0', 'pointer-events-none'); toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => { toast.classList.remove('translate-y-0', 'opacity-100'); toast.classList.add('translate-y-12', 'opacity-0', 'pointer-events-none'); }, 3000);
         };
 
         initTimeDropdowns();
