@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>空間預約登記系統</title>
+    <title>資源教室場地間借用系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -109,7 +109,8 @@
             <div class="flex flex-col md:flex-row md:items-center md:justify-between py-4 md:h-20 gap-4">
                 <div class="flex items-center space-x-3">
                     <div>
-                        <h1 class="text-xl font-bold text-cream-800 tracking-wider">空間預約登記系統</h1>
+                        <!-- 修改系統主要標題名稱 -->
+                        <h1 class="text-xl font-bold text-cream-800 tracking-wider">資源教室場地間借用系統</h1>
                     </div>
                     <!-- 連線狀態標籤 -->
                     <span id="connection-status-badge" class="text-[11px] px-2.5 py-0.5 rounded-full font-semibold bg-amber-100 text-amber-800 border border-amber-200">
@@ -397,8 +398,9 @@
 
     </main>
 
+    <!-- 頁腳修改系統名稱宣告 -->
     <footer class="bg-cream-100 border-t border-cream-300 py-6 mt-12 text-center text-xs text-cream-500 no-print">
-        <p>© 2026 奶油風校園/辦公空間預約系統. All Rights Reserved.</p>
+        <p>© 2026 資源教室場地間借用系統. All Rights Reserved.</p>
         <p class="mt-1">由 Firebase Cloud 雲端資料庫強勢驱动 ｜ 響應式、全設備適配</p>
     </footer>
 
@@ -482,13 +484,13 @@
         </div>
     </div>
 
-    <!-- 🗑️ 取消預約安全確認彈窗 -->
+    <!-- 🗑️ 取消預約安全確認彈窗 (已統一密碼輸入，改為密碼格式欄位) -->
     <div id="cancel-confirm-modal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden px-4">
         <div class="bg-cream-100 rounded-3xl w-full max-w-md p-6 border border-cream-300 shadow-2xl">
             <h3 class="text-base font-bold text-cream-800 mb-2 flex items-center space-x-1.5">🔒 安全性取消預約確認</h3>
-            <p class="text-xs text-cream-600 mb-4">為了維護資料安全，請填寫此筆登記的「學號或員工編號」以確認取消此預約：</p>
-            <input type="text" id="cancel-uid-input" placeholder="輸入此筆借用的學號 / 員工編號" class="w-full bg-white border border-cream-300 rounded-xl px-4 py-3 text-sm text-cream-800 focus:outline-none mb-4">
-            <div id="cancel-error-msg" class="hidden text-xs text-red-600 mb-4 font-semibold">⚠️ 輸入的學號或編號不正確，驗證失敗！</div>
+            <p class="text-xs text-cream-600 mb-4">為了維護資料安全，請輸入「取消登記密碼」以確認取消此預約：</p>
+            <input type="password" id="cancel-uid-input" placeholder="請輸入取消登記密碼 (預設: fgu106)" class="w-full bg-white border border-cream-300 rounded-xl px-4 py-3 text-sm text-cream-800 focus:outline-none mb-4 text-center tracking-widest">
+            <div id="cancel-error-msg" class="hidden text-xs text-red-600 mb-4 font-semibold text-center">⚠️ 密碼不正確，驗證失敗！</div>
             <div class="flex justify-end space-x-3">
                 <button onclick="closeCancelConfirmModal()" class="px-4 py-2 bg-cream-200 hover:bg-cream-300 text-cream-800 text-xs font-semibold rounded-lg">取消</button>
                 <button onclick="confirmBookingDeletion()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg">確定刪除預約</button>
@@ -502,9 +504,9 @@
         <div><p id="toast-text" class="text-xs font-bold"></p></div>
     </div>
 
-    <!-- 🖨️ 列印配置區 -->
+    <!-- 🖨️ 列印配置區，修改系統名稱 -->
     <div class="hidden print-area p-8" id="print-report-layout">
-        <h1 class="text-2xl font-bold text-center border-b-2 border-gray-800 pb-2">空間預約登記 - 歷史借用總表</h1>
+        <h1 class="text-2xl font-bold text-center border-b-2 border-gray-800 pb-2">資源教室場地間借用系統 - 歷史借用總表</h1>
         <p class="text-right text-xs mt-2" id="print-meta-date">列印日期：</p>
         <p class="text-xs text-gray-600 mb-4" id="print-meta-filter">篩選條件：</p>
         <table class="w-full text-left text-xs border-collapse border border-gray-400">
@@ -525,7 +527,7 @@
 
         const appId = 'fgu1061-booking-system';
         
-        // 預設資料庫設定
+        // 預設資料庫設定 (保留金鑰資訊)
         const defaultFirebaseConfig = {
             apiKey: "AIzaSyATH-KVWDAwrFVaimCubdIc4oz2t1XS9UU",
             authDomain: "fgu106.firebaseapp.com",
@@ -577,6 +579,7 @@
             if (banner) { banner.innerHTML = message; banner.classList.remove('hidden'); }
         }
 
+        // 隱藏載入動畫
         function dismissLoader() {
             const loader = document.getElementById('cloud-loading');
             if (loader && loader.style.display !== 'none') {
@@ -1122,7 +1125,10 @@
         window.confirmBookingDeletion = async function() {
             if (!pendingDeleteId) return;
             const target = bookings.find(b => b.id === pendingDeleteId);
-            if (target && document.getElementById('cancel-uid-input').value.trim() === target.uid) {
+            const userInputPwd = document.getElementById('cancel-uid-input').value.trim();
+            
+            // 🚀 修改驗證邏輯：統一為輸入 fgu106 (即 ADMIN_ACCESS_KEY) 即可取消預約
+            if (target && userInputPwd === ADMIN_ACCESS_KEY) {
                 // 離線模擬刪除
                 if (isOfflineMode) {
                     bookings = bookings.filter(b => b.id !== pendingDeleteId);
