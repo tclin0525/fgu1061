@@ -399,7 +399,7 @@
 
     <footer class="bg-cream-100 border-t border-cream-300 py-6 mt-12 text-center text-xs text-cream-500 no-print">
         <p>© 2026 奶油風校園/辦公空間預約系統. All Rights Reserved.</p>
-        <p class="mt-1">由 Firebase Cloud 雲端資料庫強勢驅動 ｜ 響應式、全設備適配</p>
+        <p class="mt-1">由 Firebase Cloud 雲端資料庫強勢驱动 ｜ 響應式、全設備適配</p>
     </footer>
 
     <!-- ⚙️ 雲端自訂連線設定彈窗 -->
@@ -497,7 +497,7 @@
     </div>
 
     <!-- 🌸 系統提示 Toast -->
-    <div id="toast-notification" class="fixed bottom-6 right-6 z-[100] transform translate-y-12 opacity-0 pointer-events-none transition-all duration-300 flex items-center space-x-2.5 px-5 py-4 rounded-2xl shadow-xl max-w-sm">
+    <div id="toast-notification" class="fixed bottom-6 right-6 z-[100] transform translate-y-12 opacity-0 pointer-events-none transition-all duration-300 flex items-center space-x-2.5 px-5 py-4 rounded-2xl shadow-xl bg-sage-100 border border-sage-500 text-sage-600">
         <span id="toast-icon" class="text-xl"></span>
         <div><p id="toast-text" class="text-xs font-bold"></p></div>
     </div>
@@ -707,7 +707,10 @@
         function initTimeDropdowns() {
             const startSel = document.getElementById('form-start');
             const returnTimeSel = document.getElementById('return-time');
-            startSel.innerHTML = ''; returnTimeSel.innerHTML = '';
+            
+            // 🚀 新增預設空白提示選項，防止重設後直接指到已被佔用的首個時段
+            startSel.innerHTML = '<option value="" disabled selected>請選擇開始時間</option>';
+            returnTimeSel.innerHTML = '<option value="" disabled selected>請選擇歸還時間</option>';
 
             TIME_SLOTS.slice(0, TIME_SLOTS.length - 1).forEach(time => {
                 const opt = document.createElement('option'); opt.value = time; opt.textContent = time; startSel.appendChild(opt);
@@ -719,15 +722,16 @@
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('form-date').value = today;
             document.getElementById('return-date').value = today;
-            autoSetEndTime();
         }
 
         window.autoSetEndTime = function() {
             const startVal = document.getElementById('form-start').value;
             const returnTimeSel = document.getElementById('return-time');
+            if (!startVal) return;
             const startIndex = TIME_SLOTS.indexOf(startVal);
             if (startIndex !== -1 && startIndex < TIME_SLOTS.length - 1) {
-                returnTimeSel.selectedIndex = startIndex;
+                const targetTime = TIME_SLOTS[startIndex + 1];
+                returnTimeSel.value = targetTime;
             }
             document.getElementById('return-date').value = document.getElementById('form-date').value;
         };
@@ -746,6 +750,7 @@
             const warnBox = document.getElementById('overlap-warning');
             const submitBtn = document.getElementById('submit-btn');
             
+            // 🚀 只有在時間皆已填寫時，才比對衝突
             if (date && start && returnTime) {
                 const isConflict = (date === returnDate) && checkConflict(venue, date, start, returnTime);
                 const isPastReturn = (returnDate < date) || (date === returnDate && timeToMinutes(start) >= timeToMinutes(returnTime));
@@ -762,6 +767,12 @@
                     submitBtn.classList.replace('bg-cream-400', 'bg-cream-600');
                     submitBtn.classList.remove('cursor-not-allowed');
                 }
+            } else {
+                // 尚未選取時間時，主動隱藏警告紅字，並保持按鈕基本樣式
+                warnBox.classList.add('hidden');
+                submitBtn.disabled = false;
+                submitBtn.classList.replace('bg-cream-400', 'bg-cream-600');
+                submitBtn.classList.remove('cursor-not-allowed');
             }
             renderLiveTimelineSlots(venue, date);
         };
@@ -813,6 +824,10 @@
             const dept = document.getElementById('form-dept').value.trim();
             const phone = document.getElementById('form-phone').value.trim();
 
+            if (!start || !retTime) {
+                showToast("請先選擇借用時段與歸還時間！", "error"); return;
+            }
+
             if (retDate < date || (retDate === date && timeToMinutes(start) >= timeToMinutes(retTime))) {
                 showToast("時間邏輯不正確，請檢查歸還時間", "error"); return;
             }
@@ -856,8 +871,8 @@
                 const today = new Date().toISOString().split('T')[0];
                 document.getElementById('form-date').value = today;
                 document.getElementById('return-date').value = today;
-                initTimeDropdowns(); 
-                updateLiveTimeline(); // 重新整理看板與消滅錯誤提示
+                initTimeDropdowns(); // 徹底重置並填入空白提示選項
+                updateLiveTimeline(); // 重新整理看板並消滅錯誤提示
 
             } catch (err) {
                 console.error("Upload error:", err);
